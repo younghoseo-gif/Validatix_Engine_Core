@@ -4103,6 +4103,27 @@ async function runPreBuildCheck(projectPath, currentFiles, sendLog, contentJson,
     });
 }
 
+function runInstall(projectPath, sendLog, isKo = true) {
+    return new Promise((resolve) => {
+        sendLog(isKo ? `[Validatix] 📦 의존성 설치 중... (최초 1~2분 소요)` : `[Validatix] 📦 Installing dependencies...`);
+        const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+        const installProcess = exec(`${npmCmd} install --no-audit --no-fund`, { cwd: projectPath, timeout: 300000, maxBuffer: 1024 * 1024 * 10 });
+        let logs = '';
+        installProcess.stdout.on('data', (data) => { logs += data.toString(); });
+        installProcess.stderr.on('data', (data) => { logs += data.toString(); });
+        installProcess.on('close', (code) => {
+            if (code === 0) {
+                sendLog(isKo ? `[Validatix] ✅ 의존성 설치 완료.` : `[Validatix] ✅ Dependencies installed.`);
+                resolve({ success: true, logs });
+            } else {
+                const errorLines = logs.split('\n').filter(l => l.trim()).slice(-10);
+                errorLines.forEach(l => sendLog(`[Install Error] ${l.trim()}`));
+                resolve({ success: false, logs });
+            }
+        });
+        installProcess.on('error', (err) => resolve({ success: false, logs: err.message }));
+    });
+}
 function runLocalBuild(projectPath, sendLog, isKo = true) {
     return new Promise((resolve) => {
         sendLog(isKo ? `[Validatix] 🔨 로컬 빌드 검증 중...` : `[Validatix] 🔨 Running local build...`);
@@ -4706,6 +4727,13 @@ export default nextConfig;`;
             sendLog(isKo ? `[Validatix] 🔨 파일 조립 중...` : `[Validatix] 🔨 Assembling files...`);
             writeFilesToDisk(currentFiles, projectPath, appDir, rootDir);
 
+            // 의존성 설치 (Railway/Linux: node_modules가 없으므로 빌드 전 설치)
+            const installResult = await runInstall(projectPath, sendLog, isKo);
+            if (!installResult.success) {
+                sendLog(isKo ? `🔥 [Error] 의존성 설치 실패로 빌드를 진행할 수 없습니다.` : `🔥 [Error] Dependency install failed.`);
+                return sendEnd();
+            }
+            
             // 사전 빌드 검증 (tsc --noEmit)
             const preBuildResult = await runPreBuildCheck(projectPath, currentFiles, sendLog, prebuiltJson, prebuiltJson?.style || {}, lang);
             if (preBuildResult.needsFix) {

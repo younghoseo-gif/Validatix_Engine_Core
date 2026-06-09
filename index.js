@@ -4608,7 +4608,7 @@ if (!hasPrebuiltContent) {
             return sendEnd();
         }
         try {
-            execSync(`xcopy "${templateDir}" "${projectPath}" /E /I /H /Y`, { stdio: 'ignore' });
+            fs.cpSync(templateDir, projectPath, { recursive: true });
         } catch(e) {
             sendLog(`🔥 [Error] 템플릿 복사 실패: ${e.message}`);
             return sendEnd();

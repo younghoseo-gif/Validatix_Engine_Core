@@ -2981,6 +2981,7 @@ async function validateOrRegenerate(code, sectionName, style, sendLog, lang = 'k
         return code;
     }
 
+    console.log(`[FALLBACK진단] ${sectionName} 1차 검증 실패:`, JSON.stringify(validation1.errors));
     sendLog(isKo ? `[Validatix] 🎨 ${sectionName} 스타일 다듬기...` : `[Validatix] 🎨 ${sectionName} refining styles...`);
     const regenerated = await regenerateComponent(code, validation1.errors, sectionName, style, sendLog, lang);
     if (!regenerated) {
@@ -2994,6 +2995,7 @@ async function validateOrRegenerate(code, sectionName, style, sendLog, lang = 'k
         return regenerated;
     }
 
+    console.log(`[FALLBACK진단] ${sectionName} 2차 검증 실패:`, JSON.stringify(validation2.errors));
     sendLog(isKo ? `[Validatix] 🎨 ${sectionName} 안정 디자인 적용` : `[Validatix] 🎨 ${sectionName} applying stable design`);
     return null;
 }

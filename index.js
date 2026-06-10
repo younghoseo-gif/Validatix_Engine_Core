@@ -4156,25 +4156,28 @@ function runDeploy(projectPath, vercelToken, sendLog) {
     return new Promise((resolve) => {
         const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
         const deployCmd = `${npxCmd} vercel --prod --yes --token=${vercelToken}`;
-        const deployProcess = exec(deployCmd, { cwd: projectPath });
-        let logs = "", url = "";
-        const captureLog = (data) => {
-            const text = data.toString();
-            logs += text + "\n";
-            if (text.includes("Error:") || text.includes("Failed")) sendLog(`[Vercel] ${text.trim().substring(0, 80)}...`);
-            if (text.includes("Production:")) {
-                const urlMatch = text.match(/https:\/\/[a-zA-Z0-9-]+\.vercel\.app/);
-                if (urlMatch) url = urlMatch[0];
-            }
-        };
+        const deployProcess = exec(deployCmd, { cwd: projectPath, maxBuffer: 1024 * 1024 * 10 });
+        let logs = "";
+        const captureLog = (data) => { logs += data.toString(); };
         deployProcess.stdout.on('data', captureLog);
         deployProcess.stderr.on('data', captureLog);
         deployProcess.on('close', (code) => {
-            if (code !== 0 || !url) {
+            // 실제 Vercel 출력 형식(▲ Aliased / ▲ Production)에서 주소 추출
+            let url = "";
+            const aliasMatch = logs.match(/Aliased\s+(https:\/\/[^\s]+\.vercel\.app)/);
+            const prodMatch = logs.match(/Production\s+(https:\/\/[^\s]+\.vercel\.app)/);
+            if (aliasMatch) url = aliasMatch[1];
+            else if (prodMatch) url = prodMatch[1];
+            else {
+                const anyMatch = logs.match(/https:\/\/[a-zA-Z0-9._-]+\.vercel\.app/);
+                if (anyMatch) url = anyMatch[0];
+            }
+            const success = code === 0 && !!url;
+            if (!success) {
                 const lines = logs.split('\n').filter(l => l.trim()).slice(-20);
                 lines.forEach(l => sendLog(`[Vercel Log] ${l.trim()}`));
             }
-            resolve({ success: code === 0, logs, url });
+            resolve({ success, logs, url });
         });
     });
 }

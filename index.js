@@ -2619,6 +2619,14 @@ function validateComponentCode(code, componentName) {
         const msg = parseError.message || 'JSX 구문 오류';
         const loc = parseError.loc ? ` (line ${parseError.loc.line}, col ${parseError.loc.column})` : '';
         errors.push(`JSX 구문 오류${loc}: ${msg.split('\n')[0]}`);
+        if (parseError.loc && parseError.loc.line) {
+            const _lines = code.split('\n');
+            const _ln = parseError.loc.line;
+            const _start = Math.max(0, _ln - 3);
+            const _snippet = _lines.slice(_start, _ln + 2)
+                .map((l, i) => `${_start + i + 1}| ${l}`).join('\n');
+            console.log(`[JSX진단] ${componentName} 깨진 코드 (line ${_ln} 주변):\n${_snippet}`);
+        }
     }
 
     return { valid: errors.length === 0, errors };

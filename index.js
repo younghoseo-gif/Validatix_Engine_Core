@@ -2961,9 +2961,12 @@ function extractSection(fullText, sectionName) {
 
     const afterStart = startIdx + startMarker.length;
 
-    // 다음 === 마커 찾기 (다음 섹션의 시작)
-    const nextMarkerIdx = fullText.indexOf('===', afterStart);
-    const sectionEnd = nextMarkerIdx === -1 ? fullText.length : nextMarkerIdx;
+    // 다음 "섹션 마커"만 찾는다: ===영문이름=== 형태.
+    // 코드 속 비교연산자(lang === 'ko')는 === 뒤에 공백/따옴표가 오므로 걸리지 않음.
+    const nextMarkerRegex = /===[A-Za-z][A-Za-z0-9]*===/g;
+    nextMarkerRegex.lastIndex = afterStart;
+    const nextMatch = nextMarkerRegex.exec(fullText);
+    const sectionEnd = nextMatch ? nextMatch.index : fullText.length;
 
     let sectionCode = fullText.substring(afterStart, sectionEnd).trim();
 

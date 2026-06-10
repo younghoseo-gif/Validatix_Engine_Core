@@ -4169,7 +4169,13 @@ function runDeploy(projectPath, vercelToken, sendLog) {
         };
         deployProcess.stdout.on('data', captureLog);
         deployProcess.stderr.on('data', captureLog);
-        deployProcess.on('close', (code) => { resolve({ success: code === 0, logs, url }); });
+        deployProcess.on('close', (code) => {
+            if (code !== 0 || !url) {
+                const lines = logs.split('\n').filter(l => l.trim()).slice(-20);
+                lines.forEach(l => sendLog(`[Vercel Log] ${l.trim()}`));
+            }
+            resolve({ success: code === 0, logs, url });
+        });
     });
 }
 

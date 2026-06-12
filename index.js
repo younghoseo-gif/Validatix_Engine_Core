@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
 const fs = require('fs');
+const archiver = require('archiver');
 const path = require('path');
 const { exec, execSync } = require('child_process');
 const https = require('https');
@@ -161,6 +162,10 @@ body { background-color: ${bgColor}; color: #f1f1f1; font-family: ${fontFamily};
 
 .vx-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; cursor: pointer; width: 100%; }
 .vx-card:hover { transform: translateY(-6px); border-color: ${primaryColor}; box-shadow: 0 8px 32px rgba(229,9,20,0.15); }
+.vx-stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 32px; text-align: center; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+.vx-stat-card:hover { transform: translateY(-6px); border-color: ${primaryColor}; box-shadow: 0 8px 32px ${primaryColor}26; }
+.vx-price-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.vx-price-card:hover { transform: translateY(-6px); box-shadow: 0 8px 32px ${primaryColor}26; }
 .vx-card-body { padding: 16px; }
 .vx-card-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: #f1f1f1; }
 .vx-card-desc { font-size: 0.85rem; color: #888; line-height: 1.5; }
@@ -2367,7 +2372,7 @@ function buildStats(d, style = {}) {
     if (!d.subtitle) d.subtitle = { ko: '', en: '' };
     const primaryColor = style.primaryColor || '#FF2D20';
     const items = d.items.map((item, i) => `
-        <div style={{background:'#1e1e1e',border:'1px solid #333',borderRadius:'10px',padding:'32px',textAlign:'center'}}>
+        <div className="vx-stat-card">
           <div data-vp-id="stat-num-${i}" style={{fontSize:'2.5rem',fontWeight:900,color:'${primaryColor}',marginBottom:'8px'}}>${item.number}</div>
           <div data-vp-id="stat-lbl-${i}" style={{fontSize:'1.1rem',fontWeight:700,color:'#f1f1f1',marginBottom:'6px'}}>{lang==='ko'?'${item.label.ko}':'${item.label.en}'}</div>
           <div data-vp-id="stat-desc-${i}" style={{fontSize:'0.85rem',color:'#888'}}>{lang==='ko'?'${item.desc.ko}':'${item.desc.en}'}</div>
@@ -2415,7 +2420,7 @@ function buildPricing(d, style = {}) {
         const ctaKo = (plan.cta.ko || plan.cta || '').replace(/'/g, "\\'");
         const ctaEn = (plan.cta.en || plan.cta || '').replace(/'/g, "\\'");
         return `
-          <div style={{background:'${bg}',border:'2px solid ${border}',borderRadius:'16px',padding:'32px',display:'flex',flexDirection:'column',justifyContent:'space-between',position:'relative',flex:'1',minWidth:'240px',maxWidth:'380px'}}>
+          <div className="vx-price-card" style={{background:'${bg}',border:'2px solid ${border}',borderRadius:'16px',padding:'32px',display:'flex',flexDirection:'column',justifyContent:'space-between',position:'relative',flex:'1',minWidth:'240px',maxWidth:'380px'}}>
             ${plan.highlight ? `<div style={{position:'absolute',top:'-12px',left:'50%',transform:'translateX(-50%)',background:'${primaryColor}',color:'#fff',fontSize:'0.75rem',fontWeight:700,padding:'4px 16px',borderRadius:'20px',letterSpacing:'1px',textTransform:'uppercase'}}>{lang==='ko'?'추천':'Best'}</div>` : ''}
             <div>
               <h3 data-vp-id="price-name-${i}" style={{fontSize:'1.3rem',fontWeight:800,color:'#fff',marginBottom:'8px'}}>{lang==='ko'?'${nameKo}':'${nameEn}'}</h3>
@@ -2463,7 +2468,7 @@ function buildFAQ(d, style = {}) {
         return `
           <div key={${i}} style={{borderBottom:'1px solid #2a2a2a'}}>
             <button onClick={() => setOpen(open === ${i} ? -1 : ${i})} style={{width:'100%',display:'flex',justifyContent:'space-between',alignItems:'center',padding:'20px 0',background:'transparent',border:'none',cursor:'pointer',textAlign:'left'}}>
-              <span data-vp-id="faq-q-${i}" style={{color:'#f1f1f1',fontSize:'1rem',fontWeight:600,paddingRight:'16px'}}>{lang==='ko'?'${qKo}':'${qEn}'}</span>
+              <span data-vp-id="faq-q-${i}" style={{color:open===${i}?'${primaryColor}':'#f1f1f1',fontSize:'1rem',fontWeight:600,paddingRight:'16px',transition:'color 0.2s ease'}}>{lang==='ko'?'${qKo}':'${qEn}'}</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${primaryColor}" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,transition:'transform 0.2s',transform:open===${i}?'rotate(180deg)':'rotate(0deg)'}}><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             {open === ${i} && (
@@ -2507,7 +2512,7 @@ export default function CTASection() {
   return (
     <section id="cta" style={{padding:'72px 24px',background:'linear-gradient(135deg, ${primaryColor}15 0%, #0f0f0f 50%, ${primaryColor}10 100%)'}}>
       <div style={{maxWidth:'800px',margin:'0 auto',textAlign:'center'}}>
-        <h2 data-vp-id="cta-title" style={{fontSize:'2rem',fontWeight:900,color:'#fff',marginBottom:'16px'}}>{lang==='ko'?'지금 바로 시작하세요':'Get Started Today'}</h2>
+        <h2 data-vp-id="cta-title" style={{fontSize:'2.5rem',fontWeight:900,color:'#fff',marginBottom:'16px'}}>{lang==='ko'?'지금 바로 시작하세요':'Get Started Today'}</h2>
         <p data-vp-id="cta-desc" style={{color:'#999',fontSize:'1.05rem',lineHeight:'1.7',marginBottom:'32px'}}>{lang==='ko'?'${brandName}와 함께 아이디어를 현실로 만들어 보세요.':'Turn your idea into reality with ${brandName}.'}</p>
         <div style={{display:'flex',gap:'16px',justifyContent:'center',flexWrap:'wrap'}}>
           <a href="/auth" className="vx-btn-primary" data-vp-id="cta-btn"><ArrowRight size={16}/>{lang==='ko'?'무료로 시작하기':'Start for Free'}</a>
@@ -4836,22 +4841,37 @@ export default nextConfig;`;
                                 sendLog(`[Vercel] ⚠️ Stripe 환경변수 설정 실패: ${e.message}`);
                             }
                         }
-                        // ───── 소스코드 ZIP 자동 생성 (15주차) ─────
-                        try {
-                            const sourceDownloadsDir = path.join(__dirname, 'Source_Downloads');
-                            if (!fs.existsSync(sourceDownloadsDir)) fs.mkdirSync(sourceDownloadsDir, { recursive: true });
-                            const zipFileName = `${projectName}.zip`;
-                            const zipFilePath = path.join(sourceDownloadsDir, zipFileName);
-                            if (fs.existsSync(zipFilePath)) fs.unlinkSync(zipFilePath);
-                            const tempCopyPath = path.join(targetDir, `_zip_temp_${projectName}`);
-                            if (fs.existsSync(tempCopyPath)) fs.rmSync(tempCopyPath, { recursive: true, force: true });
-                            execSync(`xcopy "${projectPath}" "${tempCopyPath}" /E /I /H /Y /EXCLUDE:${path.join(__dirname, 'zip_exclude.txt')}`, { stdio: 'ignore' });
-                            execSync(`powershell -Command "Compress-Archive -Path '${tempCopyPath}\\*' -DestinationPath '${zipFilePath}' -Force"`, { stdio: 'ignore', timeout: 60000 });
-                            fs.rmSync(tempCopyPath, { recursive: true, force: true });
-                            sendLog(isKo ? `[Validatix] ✅ 소스코드 ZIP 생성 완료.` : `[Validatix] ✅ Source code ZIP ready.`);
-                            res.write(`data: ${JSON.stringify({ sourceZip: zipFileName })}\n\n`);
-                        } catch (zipErr) {
-                            sendLog(isKo ? `[Validatix] ⚠️ ZIP 생성 실패 (배포는 정상): ${zipErr.message}` : `[Validatix] ⚠️ ZIP failed (deploy OK): ${zipErr.message}`);
+                        // ───── 소스코드 ZIP 자동 생성 (15주차, archiver) — Starter+ 전용 ─────
+                        if (isPaidUser) {
+                            try {
+                                const sourceDownloadsDir = path.join(__dirname, 'Source_Downloads');
+                                if (!fs.existsSync(sourceDownloadsDir)) fs.mkdirSync(sourceDownloadsDir, { recursive: true });
+                                const zipFileName = `${projectName}.zip`;
+                                const zipFilePath = path.join(sourceDownloadsDir, zipFileName);
+                                if (fs.existsSync(zipFilePath)) fs.unlinkSync(zipFilePath);
+
+                                await new Promise((resolve, reject) => {
+                                    const output = fs.createWriteStream(zipFilePath);
+                                    const archive = archiver('zip', { zlib: { level: 9 } });
+                                    output.on('close', resolve);
+                                    output.on('error', reject);
+                                    archive.on('error', reject);
+                                    archive.pipe(output);
+                                    archive.glob('**/*', {
+                                        cwd: projectPath,
+                                        dot: true,
+                                        ignore: ['**/node_modules/**', '**/.next/**', '**/.vercel/**']
+                                    });
+                                    archive.finalize();
+                                });
+
+                                sendLog(isKo ? `[Validatix] ✅ 소스코드 ZIP 생성 완료.` : `[Validatix] ✅ Source code ZIP ready.`);
+                                res.write(`data: ${JSON.stringify({ sourceZip: zipFileName })}\n\n`);
+                            } catch (zipErr) {
+                                sendLog(isKo ? `[Validatix] ⚠️ ZIP 생성 실패 (배포는 정상): ${zipErr.message}` : `[Validatix] ⚠️ ZIP failed (deploy OK): ${zipErr.message}`);
+                            }
+                        } else {
+                            sendLog(isKo ? `[Validatix] 🔒 소스코드 다운로드는 Starter 플랜 이상에서 제공됩니다.` : `[Validatix] 🔒 Source code download is available on Starter plan and above.`);
                         }
                         sendUrl(deployResult.url);
                         isDeployed = true;

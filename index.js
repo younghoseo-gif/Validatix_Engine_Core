@@ -5914,7 +5914,7 @@ app.post('/api/replace-images-batch', async (req, res) => {
           const imageCount = usageData.image_monthly_count || 0;
           const remaining = imageLimit - imageCount;
           if (remaining <= 0) {
-            return res.status(403).json({ error: `Image limit reached (${imageCount}/${imageLimit}). Please upgrade your plan.` });
+            return res.status(403).json({ error: `이미지 생성 한도 초과 (${imageCount}/${imageLimit}). 플랜을 업그레이드해주세요. / Image limit reached (${imageCount}/${imageLimit}). Please upgrade your plan.` });
           }
           if (uniqueUrls.length > remaining) {
             return res.status(403).json({ error: `Need ${uniqueUrls.length} images but only ${remaining} remaining this month. Please upgrade your plan.` });

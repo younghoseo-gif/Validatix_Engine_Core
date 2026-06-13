@@ -505,6 +505,41 @@ app.delete('/api/clear-history', async (req, res) => {
     } catch (error) { res.status(500).json({ error: '삭제 실패' }); }
 });
 
+// ───── 채팅 기록 저장/불러오기 (Supabase) ─────
+app.get('/api/history/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!userId) return res.status(400).json({ error: 'userId required' });
+        const { data, error } = await supabaseAdmin
+            .from('user_histories')
+            .select('history')
+            .eq('user_id', userId)
+            .maybeSingle();
+        if (error) throw error;
+        res.json({ history: data?.history || [] });
+    } catch (e) {
+        console.error('History load error:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/history/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { history } = req.body;
+        if (!userId) return res.status(400).json({ error: 'userId required' });
+        if (!Array.isArray(history)) return res.status(400).json({ error: 'history must be an array' });
+        const { error } = await supabaseAdmin
+            .from('user_histories')
+            .upsert({ user_id: userId, history, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        console.error('History save error:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ─────────────────────────────────────────────────────────────
 // 4. 프롬프트 증폭
 // ─────────────────────────────────────────────────────────────

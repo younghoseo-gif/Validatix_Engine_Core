@@ -4,6 +4,7 @@ const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
 const fs = require('fs');
 const archiver = require('archiver');
+const AdmZip = require('adm-zip');
 const path = require('path');
 const { exec, execSync } = require('child_process');
 const https = require('https');
@@ -76,6 +77,62 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+// ───── 프로젝트 영속성: Supabase Storage 백업/복원 ─────
+async function backupProject(projectPath, projectName) {
+  try {
+    if (!fs.existsSync(projectPath)) {
+      console.error(`[Backup] FAIL ${projectName}: project folder not found`);
+      return false;
+    }
+    const zip = new AdmZip();
+    const entries = fs.readdirSync(projectPath);
+    for (const entry of entries) {
+      if (entry === 'node_modules' || entry === '.next' || entry === '.vercel') continue;
+      const full = path.join(projectPath, entry);
+      if (fs.statSync(full).isDirectory()) {
+        zip.addLocalFolder(full, entry);
+      } else {
+        zip.addLocalFile(full);
+      }
+    }
+    const zipBuffer = zip.toBuffer();
+    const { error } = await supabaseAdmin.storage
+      .from('project-backups')
+      .upload(`${projectName}.zip`, zipBuffer, { contentType: 'application/zip', upsert: true });
+    if (error) {
+      console.error(`[Backup] FAIL ${projectName}: ${error.message}`);
+      return false;
+    }
+    console.log(`[Backup] OK ${projectName} (${(zipBuffer.length / 1024 / 1024).toFixed(2)}MB)`);
+    return true;
+  } catch (e) {
+    console.error(`[Backup] FAIL ${projectName}: ${e.message}`);
+    return false;
+  }
+}
+
+async function restoreProject(projectPath, projectName) {
+  try {
+    if (fs.existsSync(projectPath)) return true;
+    const { data, error } = await supabaseAdmin.storage
+      .from('project-backups')
+      .download(`${projectName}.zip`);
+    if (error || !data) {
+      console.error(`[Restore] no backup for ${projectName}: ${error?.message || 'not found'}`);
+      return false;
+    }
+    const arrayBuffer = await data.arrayBuffer();
+    const zip = new AdmZip(Buffer.from(arrayBuffer));
+    fs.mkdirSync(projectPath, { recursive: true });
+    zip.extractAllTo(projectPath, true);
+    console.log(`[Restore] OK ${projectName}`);
+    return true;
+  } catch (e) {
+    console.error(`[Restore] FAIL ${projectName}: ${e.message}`);
+    return false;
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 // CSS / Layout / SafePage
@@ -4910,6 +4967,7 @@ export default nextConfig;`;
                         }
                         sendUrl(deployResult.url);
                         isDeployed = true;
+                        await backupProject(projectPath, projectName);
                     } else {
                         sendLog(`⚠️ Vercel 배포 실패. 재시도...`);
                         attempt++;
@@ -5901,6 +5959,7 @@ app.post('/api/replace-images-batch', async (req, res) => {
     if (!REPLICATE_TOKEN) return res.status(500).json({ error: 'REPLICATE_API_TOKEN not configured' });
 
     const projectDir = path.join(__dirname, 'Generated_Projects', projectName);
+    await restoreProject(projectDir, projectName);
     if (!fs.existsSync(projectDir)) return res.status(404).json({ error: 'Project not found' });
 
     // 1) 모든 파일에서 picsum URL 찾기
@@ -6080,6 +6139,7 @@ ${contextList}` }],
     }
 
     // 이미지 사용량 증가
+    if (modifiedFiles.size > 0) await backupProject(projectDir, projectName);
     const replacedCount = Object.keys(urlReplacements).length;
     if (userId && replacedCount > 0) {
       const { data: ud } = await supabaseAdmin.from('usage_limits').select('image_monthly_count').eq('user_id', userId).single();

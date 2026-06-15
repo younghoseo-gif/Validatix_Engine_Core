@@ -15,6 +15,7 @@
     "@anthropic-ai/sdk": "^0.79.0",
     "@babel/parser": "^7.29.3",
     "@supabase/supabase-js": "^2.100.0",
+    "adm-zip": "^0.5.17",
     "archiver": "^7.0.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",

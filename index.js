@@ -6120,7 +6120,7 @@ ${contextList}` }],
       const newUrl = await generateOneImage(uniqueUrls[i], prompts[i], i);
       if (newUrl) urlReplacements[uniqueUrls[i]] = newUrl;
       if (i < uniqueUrls.length - 1) {
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 15000));
       }
     }
 

@@ -6000,44 +6000,69 @@ ${contextList}` }],
 
     // 3) Flux로 이미지 병렬 생성 (3개씩 배치)
     const urlReplacements = {};
-    const batchSize = 2;
 
-    for (let i = 0; i < uniqueUrls.length; i += batchSize) {
-      const batch = uniqueUrls.slice(i, i + batchSize);
-      const batchPrompts = prompts.slice(i, i + batchSize);
-
-      const results = await Promise.all(batch.map(async (oldUrl, j) => {
+    async function generateOneImage(oldUrl, prompt, idx) {
+      const sizeMatch = oldUrl.match(/\/(\d+)\/(\d+)$/);
+      const w = sizeMatch ? parseInt(sizeMatch[1]) : 800;
+      const h = sizeMatch ? parseInt(sizeMatch[2]) : 500;
+      const aspect = w >= h * 1.4 ? '16:9' : h >= w * 1.4 ? '9:16' : w > h ? '4:3' : '1:1';
+      for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          const sizeMatch = oldUrl.match(/\/(\d+)\/(\d+)$/);
-          const w = sizeMatch ? parseInt(sizeMatch[1]) : 800;
-          const h = sizeMatch ? parseInt(sizeMatch[2]) : 500;
-          const aspect = w >= h * 1.4 ? '16:9' : h >= w * 1.4 ? '9:16' : w > h ? '4:3' : '1:1';
-
           const repRes = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${REPLICATE_TOKEN}`, 'Content-Type': 'application/json', 'Prefer': 'wait' },
-            body: JSON.stringify({ input: { prompt: batchPrompts[j], aspect_ratio: aspect, output_format: 'webp', output_quality: 80 } })
+            body: JSON.stringify({ input: { prompt, aspect_ratio: aspect, output_format: 'webp', output_quality: 80 } })
           });
-          if (!repRes.ok) return { oldUrl, newUrl: null };
+          if (!repRes.ok) {
+            const eb = await repRes.text().catch(() => '');
+            console.error(`[Batch Image] FAIL ${idx + 1} try${attempt} HTTP ${repRes.status}: ${eb.slice(0, 200)}`);
+            if (attempt < 2) { await new Promise(r => setTimeout(r, 1500)); continue; }
+            return null;
+          }
           const repData = await repRes.json();
+          if (repData.status === 'failed') {
+            console.error(`[Batch Image] FAIL ${idx + 1} try${attempt} prediction: ${repData.error}`);
+            if (attempt < 2) { await new Promise(r => setTimeout(r, 1500)); continue; }
+            return null;
+          }
           const tempUrl = Array.isArray(repData.output) ? repData.output[0] : repData.output;
-          if (!tempUrl) return { oldUrl, newUrl: null };
-
+          if (!tempUrl) {
+            console.error(`[Batch Image] FAIL ${idx + 1} try${attempt} no output`);
+            if (attempt < 2) { await new Promise(r => setTimeout(r, 1500)); continue; }
+            return null;
+          }
           const imgRes = await fetch(tempUrl);
-          if (!imgRes.ok) return { oldUrl, newUrl: null };
+          if (!imgRes.ok) {
+            console.error(`[Batch Image] FAIL ${idx + 1} download HTTP ${imgRes.status}`);
+            if (attempt < 2) { await new Promise(r => setTimeout(r, 1500)); continue; }
+            return null;
+          }
           const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
-
-          const fileName = `ai-generated/${userId || 'anon'}/batch-${Date.now()}-${i + j}.webp`;
+          const fileName = `ai-generated/${userId || 'anon'}/batch-${Date.now()}-${idx}.webp`;
           const { error: upErr } = await supabaseAdmin.storage.from('images').upload(fileName, imgBuffer, { contentType: 'image/webp', upsert: true });
-          if (upErr) return { oldUrl, newUrl: null };
-
+          if (upErr) {
+            console.error(`[Batch Image] FAIL ${idx + 1} upload: ${upErr.message}`);
+            if (attempt < 2) { await new Promise(r => setTimeout(r, 1500)); continue; }
+            return null;
+          }
           const { data: pubData } = supabaseAdmin.storage.from('images').getPublicUrl(fileName);
-          console.log(`[Batch Image] ✅ ${i + j + 1}/${uniqueUrls.length}: "${batchPrompts[j].substring(0, 40)}..."`);
-          return { oldUrl, newUrl: pubData.publicUrl };
-        } catch (e) { return { oldUrl, newUrl: null }; }
-      }));
+          console.log(`[Batch Image] OK ${idx + 1}/${uniqueUrls.length}: "${prompt.substring(0, 40)}..."`);
+          return pubData.publicUrl;
+        } catch (e) {
+          console.error(`[Batch Image] FAIL ${idx + 1} try${attempt} exception: ${e.message}`);
+          if (attempt < 2) { await new Promise(r => setTimeout(r, 1500)); continue; }
+          return null;
+        }
+      }
+      return null;
+    }
 
-      for (const r of results) { if (r.newUrl) urlReplacements[r.oldUrl] = r.newUrl; }
+    for (let i = 0; i < uniqueUrls.length; i++) {
+      const newUrl = await generateOneImage(uniqueUrls[i], prompts[i], i);
+      if (newUrl) urlReplacements[uniqueUrls[i]] = newUrl;
+      if (i < uniqueUrls.length - 1) {
+        await new Promise(r => setTimeout(r, 600));
+      }
     }
 
     // 4) 파일에서 URL 교체

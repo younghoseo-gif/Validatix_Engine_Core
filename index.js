@@ -5852,7 +5852,7 @@ app.post('/api/generate-image', async (req, res) => {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 200,
           messages: [{ role: 'user', content: `Convert the following image description into an optimized English prompt for AI image generation (Flux model). Keep it concise (under 80 words). If already in English, just optimize it for better image generation. Do NOT include any explanation, just output the prompt only.\n\nInput: ${prompt.trim()}` }],
         }),
@@ -6025,7 +6025,7 @@ app.post('/api/replace-images-batch', async (req, res) => {
         method: 'POST',
         headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 1500,
           messages: [{ role: 'user', content: `You are generating image prompts for an AI image generator (Flux model).
 
@@ -6049,6 +6049,7 @@ ${contextList}` }],
       const text = claudeData.content?.[0]?.text || '';
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (jsonMatch) prompts = JSON.parse(jsonMatch[0]);
+      else console.error('[Batch Image] No JSON array. Raw response:', text.slice(0, 300));
     } catch (e) {
       console.error('[Batch Image] Claude prompt generation failed:', e);
     }

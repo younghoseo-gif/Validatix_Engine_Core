@@ -88,7 +88,7 @@ async function backupProject(projectPath, projectName) {
     const zip = new AdmZip();
     const entries = fs.readdirSync(projectPath);
     for (const entry of entries) {
-      if (entry === 'node_modules' || entry === '.next' || entry === '.vercel') continue;
+      if (entry === 'node_modules' || entry === '.next') continue;
       const full = path.join(projectPath, entry);
       if (fs.statSync(full).isDirectory()) {
         zip.addLocalFolder(full, entry);
@@ -6139,7 +6139,11 @@ ${contextList}` }],
     }
 
     // 이미지 사용량 증가
-    if (modifiedFiles.size > 0) await backupProject(projectDir, projectName);
+    if (modifiedFiles.size > 0) {
+      await backupProject(projectDir, projectName);
+      const deployResult = await runDeploy(projectDir, process.env.VERCEL_TOKEN, console.log);
+      console.log(`[Batch Image] Redeploy ${deployResult.success ? 'OK' : 'FAILED'}: ${deployResult.url || ''}`);
+    }
     const replacedCount = Object.keys(urlReplacements).length;
     if (userId && replacedCount > 0) {
       const { data: ud } = await supabaseAdmin.from('usage_limits').select('image_monthly_count').eq('user_id', userId).single();

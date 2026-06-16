@@ -954,8 +954,8 @@ Output ONLY valid JSON. No markdown, no explanation.
       "type": "stat_cards",
       "title": "Korean title",
       "cards": [
-        { "label": "Korean label", "field": "total", "color": "#FF2D20", "icon": "List" },
-        { "label": "Korean label", "field": "recent", "color": "#3b82f6", "icon": "Clock" }
+        { "label": "Korean label", "field": "total", "agg": "count", "color": "#FF2D20", "icon": "List" },
+        { "label": "Korean label", "field": "recent", "agg": "count", "color": "#3b82f6", "icon": "Clock" }
       ]
     },
     {
@@ -972,6 +972,7 @@ RULES:
 - widgets: exactly 2 items
 - stat_cards cards: 2-3 items
 - field must be "total", "recent", or one of: ${JSON.stringify(userColNames)}
+- agg must be "count", "avg", or "sum". Use "avg" for averages (e.g. average rating), "sum" for summing a numeric field, otherwise "count". For "total" and "recent", always use "count".
 - icon must be one of: BookOpen, Calendar, CheckSquare, TrendingUp, Star, Clock, BarChart2, Activity, Target, Award, Bookmark, List
 - ALL text in Korean
 - Output ONLY JSON` }]
@@ -1067,6 +1068,8 @@ function buildWidgetJSX(featureSpec) {
                 let valueExpr;
                 if (card.field === 'total') valueExpr = 'items.length';
                 else if (card.field === 'recent') valueExpr = 'items.filter(i => new Date(i.created_at) > new Date(Date.now()-7*86400000)).length';
+                else if (card.agg === 'avg') valueExpr = `(items.length ? (items.reduce((s,i) => s + Number(i.${card.field}||0), 0) / items.length).toFixed(1) : 0)`;
+                else if (card.agg === 'sum') valueExpr = `items.reduce((s,i) => s + Number(i.${card.field}||0), 0)`;
                 else valueExpr = `items.filter(i => i.${card.field}).length`;
                 return `
           <div style={{background:'#1e1e1e',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'20px 24px',flex:1,minWidth:'140px'}}>
@@ -1158,6 +1161,7 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
         if (pg === 'numeric' || pg === 'integer') return 'number';
         if (pg === 'date' || pg === 'timestamptz') return 'date';
         const nm = f.name.toLowerCase();
+        if (nm.includes('image') || nm.includes('img') || nm.includes('photo') || nm.includes('cover') || nm.includes('avatar') || nm.includes('thumbnail') || nm.includes('picture') || nm.includes('banner') || nm.includes('poster')) return 'image';
         if (nm.includes('date') || nm.includes('_at') || nm.startsWith('start') || nm.startsWith('end') || nm.includes('checkin') || nm.includes('check_in') || nm.includes('checkout') || nm.includes('check_out')) return 'date';
         if (nm.includes('phone') || nm.includes('tel') || nm.includes('contact')) return 'phone';
         return 'text';
@@ -1169,6 +1173,25 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
         const label = f.label || f.name;
         const ph = f.placeholder || label;
 
+        if (kind === 'image') {
+            return `
+              <div>
+                <label style={{display:'block',fontSize:'13px',color:'#aaa',marginBottom:'6px'}}>${label}</label>
+                {form['${f.name}'] && (
+                  <img src={form['${f.name}']} alt="" style={{width:'100%',maxHeight:'180px',objectFit:'cover',borderRadius:'8px',marginBottom:'8px',border:'1px solid #333'}} />
+                )}
+                <label style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',width:'100%',background:'#111',border:'1px dashed #444',borderRadius:'8px',padding:'14px',color:'#aaa',fontSize:'14px',cursor: uploadingField==='${f.name}' ? 'wait' : 'pointer'}}>
+                  {uploadingField === '${f.name}' ? '업로드 중...' : (form['${f.name}'] ? '사진 변경' : '사진 선택')}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingField==='${f.name}'}
+                    onChange={e => { const file = e.target.files?.[0]; if (file) handleImageUpload('${f.name}', file); }}
+                    style={{display:'none'}}
+                  />
+                </label>
+              </div>`;
+        }
         if (kind === 'boolean') {
             return `
               <div>
@@ -1293,6 +1316,7 @@ export default function Dashboard() {
   const [errorMsg, setErrorMsg] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [recentPayments, setRecentPayments] = useState<any[]>([]);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
 ${widgetHooks}
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -1377,6 +1401,18 @@ ${widgetHooks}
     if (user) fetchItems(user.id);
   };
 
+  const handleImageUpload = async (fieldName: string, file: File) => {
+    setUploadingField(fieldName);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.url) { setForm(prev => ({ ...prev, [fieldName]: data.url })); }
+      else { alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.'); }
+    } catch { alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.'); }
+    finally { setUploadingField(null); }
+  };
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/';

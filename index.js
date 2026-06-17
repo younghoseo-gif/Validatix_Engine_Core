@@ -4672,6 +4672,12 @@ Output ONLY a valid JSON object. No markdown, no explanation.
 }
 
 RULES:
+- TRUTHFULNESS (MANDATORY — this is a brand-new product with ZERO users, reviews, or track record):
+  · NEVER fabricate testimonials, reviews, or user quotes. No "베타 사용자 후기", no "저도 쓰고 있어요", no fake satisfied-customer or witness voices anywhere.
+  · NEVER invent statistics or market figures ("60% of cafes", "10만 개 중 60%", "80% use Instagram") unless they are explicitly provided in the context above. If you don't have a real number, don't use one.
+  · NEVER promise pricing, trials, or discounts that are not in the input. Do NOT invent "30일 무료 체험" or "연간 2개월 무료". Use ONLY the price given; if no trial/discount is specified, don't create one.
+  · Community/local posts (Reddit, Naver Cafe, Everytime, Indie Hackers, Instagram) MUST use the MAKER's honest first-person voice ("제가 만들었어요" / "I built this"), NEVER a fake customer or third-party witness.
+  · Where social proof would normally go, use empathy with the problem itself ("if you've ever run out mid-rush...") instead of invented proof.
 - All Korean text must be natural, conversational Korean (not translated-sounding)
 - Twitter copies: exactly 3 different angles. Include relevant hashtags
 - Product Hunt: tagline MUST be under 60 chars. Topics must be real PH topics

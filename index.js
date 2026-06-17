@@ -674,7 +674,7 @@ RULES:
 - competitors: 3-5 real, specific competitors (not generic)
 - url: actual or best-guess website URL
 - strengths: exactly 2 items each
-- weaknesses: exactly 2 items each
+- weaknesses: exactly 2 items each. QUALITY BAR (critical): each weakness MUST be specific and exploitable — state WHO it fails, WHY, and in WHAT situation. Forbidden as a standalone fault: vague words like "expensive", "complex", "slow", "limited". Bad: "expensive". Good: "monthly $200+ pricing prices out the small/solo operators this product targets, who only need basic alerts". Each weakness should map to a gap THIS product can fill. If the PRD is thin or generic, use your real-world knowledge of this exact product category to infer concrete, realistic weaknesses — never output generic filler.
 - differentiation: exactly 3 items
 - strategy: REQUIRED. positioning + pricing_strategy + exactly 3 quick_wins
 - marketGaps: REQUIRED. exactly 3 gaps no competitor currently fills

@@ -674,7 +674,7 @@ RULES:
 - competitors: 3-5 real, specific competitors (not generic)
 - url: actual or best-guess website URL
 - strengths: exactly 2 items each
-- weaknesses: exactly 2 items each. QUALITY BAR (critical): each weakness MUST be specific and exploitable — state WHO it fails, WHY, and in WHAT situation. Forbidden as a standalone fault: vague words like "expensive", "complex", "slow", "limited". Bad: "expensive". Good: "monthly $200+ pricing prices out the small/solo operators this product targets, who only need basic alerts". Each weakness should map to a gap THIS product can fill. If the PRD is thin or generic, use your real-world knowledge of this exact product category to infer concrete, realistic weaknesses — never output generic filler.
+- weaknesses: exactly 2 items each. QUALITY BAR (critical): each weakness MUST be specific and exploitable — state WHO it fails, WHY, and in WHAT situation. Forbidden as a standalone fault: vague words like "expensive", "complex", "slow", "limited". Bad: "expensive". Good: "monthly $200+ pricing prices out the small/solo operators this product targets, who only need basic alerts". Each weakness should map to a gap THIS product can fill. Prefer weaknesses about pricing, target-fit, setup burden, or positioning — these are safe to reason about. Do NOT assert a competitor "lacks" or "has no" a specific feature unless certain; you cannot browse the web, so feature-absence claims are often wrong. When unsure, attack price/fit, not feature gaps.
 - differentiation: exactly 3 items
 - strategy: REQUIRED. positioning + pricing_strategy + exactly 3 quick_wins
 - marketGaps: REQUIRED. exactly 3 gaps no competitor currently fills
@@ -4668,7 +4668,7 @@ RULES:
   · NEVER fabricate testimonials, reviews, or user quotes. No "베타 사용자 후기", no "저도 쓰고 있어요", no fake satisfied-customer or witness voices anywhere.
   · NEVER invent statistics, market figures, or market-size numbers — whether stated as fact OR disguised as a rhetorical question ("10만 개 중 얼마나...", "how many of the 100k cafes..."). No invented totals, percentages, or counts at all unless explicitly provided in the context above. If you don't have a real number, don't reference one — not even rhetorically.
   · NEVER promise pricing, trials, or discounts that are not in the input. Do NOT invent "30일 무료 체험" or "연간 2개월 무료". Use ONLY the price given; if no trial/discount is specified, don't create one.
-  · NEVER promise product features, capabilities, or paid-tier perks that are not in the input. The generated apps are functionally simple — manual record entry (add/edit/delete), basic threshold/low-stock alerts, and auth. Do NOT invent advanced automation (auto-deduction, recipe/sales syncing, AI analysis, third-party integrations, analytics dashboards) to make the product sound more capable. Market ONLY what the app actually does; if a feature is not clearly in the input, it does not exist.
+  · NEVER promise features or paid-tier perks not in the input. The app stores ONLY each record's CURRENT value — there is NO history log, NO past-entry archive, NO "records saved over time", and NO tracking/sync/analysis/integration of any kind. Never mention any such capability, even in passing. If a capability is not word-for-word present in the input, treat it as NON-EXISTENT. BUT market the REAL features confidently and concretely: instant manual add/edit/delete, per-item low-stock threshold with red alerts, pinning key items to the top, and pre-loaded category templates.
   · Community/local posts (Reddit, Naver Cafe, Everytime, Indie Hackers, Instagram) MUST use the MAKER's honest first-person voice ("제가 만들었어요" / "I built this"), NEVER a fake customer or third-party witness.
   · Where social proof would normally go, use empathy with the problem itself ("if you've ever run out mid-rush...") instead of invented proof.
 - All Korean text must be natural, conversational Korean (not translated-sounding)
@@ -4676,7 +4676,7 @@ RULES:
 - Product Hunt: tagline MUST be under 60 chars. Topics must be real PH topics
 - Google Ads headlines: MUST be under 30 chars each. Descriptions under 90 chars
 - Email bodies: include the deployed URL naturally
-- Positioning vsCompetitors: use REAL competitor names AND attack their SPECIFIC weaknesses listed in the context. Each line must name a concrete gap, not a vague claim.
+- Positioning vsCompetitors: use REAL competitor names. Frame each line around OUR verifiable strengths (our exact price vs theirs, café-specific templates, 2-minute setup), NOT around unverifiable claims about what a competitor lacks. NEVER write "~ has no X", "~ completely lacks Y", or "~ is missing Z" about a competitor. Be confident and concrete, but truthful.
 - Reddit: suggest REAL subreddits relevant to this app's niche
 - Community posts: must NOT sound like ads. Authentic, helpful tone
 - Output ONLY the JSON` }]

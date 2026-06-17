@@ -4551,16 +4551,23 @@ app.post('/api/marketing', async (req, res) => {
     const marketContext = marketData ? `
 Market Research:
 - TAM: ${marketData.tam} / SAM: ${marketData.sam} / SOM: ${marketData.som}
-- Target: ${marketData.target}
-- Score: ${marketData.score}/10
+- Target Customer: ${marketData.target}
+- Market Trends: ${(marketData.trends || []).join(' / ')}
+- Viability Score: ${marketData.score}/10
+- Competition Level: ${marketData.competition || 'N/A'}
 - Revenue Model: ${marketData.revenueModel}
-- Start Price: ${marketData.startPrice}` : '';
+- Start Price: ${marketData.startPrice}
+- Key Opportunity & Risk: ${marketData.conclusion || ''}` : '';
 
     const competitorContext = competitorData ? `
 Competitor Analysis:
-- Competitors: ${competitorData.competitors?.map(c => c.name).join(', ')}
-- Differentiation: ${competitorData.differentiation?.join(', ')}
-- Opportunity: ${competitorData.opportunity}` : '';
+- Competitive Landscape: ${competitorData.summary || ''}
+- Competitors (name / pricing / weaknesses to attack):
+${(competitorData.competitors || []).map(c => `  • ${c.name} — pricing: ${c.pricing || 'N/A'} — weaknesses: ${(c.weaknesses || []).join('; ') || 'N/A'}`).join('\n')}
+- Our Differentiation: ${(competitorData.differentiation || []).join(', ')}
+- Positioning Strategy: ${competitorData.strategy?.positioning || ''}
+- Market Gaps (no competitor fills these): ${(competitorData.marketGaps || []).join(', ')}
+- Opportunity: ${competitorData.opportunity || ''}` : '';
 
     try {
         const result = await anthropic.messages.create({
@@ -4573,6 +4580,15 @@ PRD: "${prd}"
 Deployed URL: "${deployUrl || 'https://app.example.com'}"
 ${marketContext}
 ${competitorContext}
+
+[HOW TO USE THIS CONTEXT — THIS IS THE DIFFERENCE BETWEEN GENERIC SLOP AND A WINNING LAUNCH]
+Generic marketing that could be copy-pasted onto any other app is an automatic FAILURE. Every single line must be grounded in the specific context above:
+1. CONSISTENCY: Take the differentiation points and weave the SAME core positioning across every channel — Twitter, LinkedIn, email, ads, community. One unmistakable message everywhere.
+2. ATTACK REAL WEAKNESSES: For positioning.vsCompetitors, use the SPECIFIC weaknesses listed for each competitor above. Never invent vague advantages like "faster" or "easier" — name the actual gap this product fills that the competitor leaves open.
+3. RIDE THE TRENDS: Use the market trends to make copy timely and urgent, so it feels written for THIS moment.
+4. SPEAK TO THE TARGET: Match tone, vocabulary, and pain points to the exact target customer described above.
+5. ANCHOR ON OPPORTUNITY: Build the core value proposition around the key opportunity, and quietly pre-empt the key risk.
+6. EXPLOIT THE GAPS: Turn the market gaps into headline hooks — these are things no competitor is saying.
 
 Output ONLY a valid JSON object. No markdown, no explanation.
 
@@ -4661,7 +4677,7 @@ RULES:
 - Product Hunt: tagline MUST be under 60 chars. Topics must be real PH topics
 - Google Ads headlines: MUST be under 30 chars each. Descriptions under 90 chars
 - Email bodies: include the deployed URL naturally
-- Positioning vsCompetitors: use REAL competitor names from the competitor analysis
+- Positioning vsCompetitors: use REAL competitor names AND attack their SPECIFIC weaknesses listed in the context. Each line must name a concrete gap, not a vague claim.
 - Reddit: suggest REAL subreddits relevant to this app's niche
 - Community posts: must NOT sound like ads. Authentic, helpful tone
 - Output ONLY the JSON` }]

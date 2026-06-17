@@ -4594,21 +4594,19 @@ Output ONLY a valid JSON object. No markdown, no explanation.
 
 {
   "channelStrategy": {
-    "title": "채널 전략 분석",
-    "primary": ["Korean: 1순위 채널 + 이유 (1줄)", "Korean: 2순위 채널 + 이유 (1줄)"],
-    "secondary": ["Korean: 보조 채널 1 + 이유", "Korean: 보조 채널 2 + 이유"],
+    "title": "채널 전략",
+    "channels": [
+      {
+        "name": "Korean: 채널명 (예: 네이버 카페 - 카페창업, 인스타그램 릴스, 카카오 오픈채팅)",
+        "tier": "primary 또는 secondary 중 하나",
+        "format": "Korean: 이 채널의 게시 형식 (예: 후기 글, 릴스 스크립트, 짧은 게시글)",
+        "rationale": "Korean: 이 타겟 고객이 이 채널에 실제로 모이는 이유 (1줄)",
+        "copy": "Korean: 이 채널 형식과 길이에 딱 맞는 실제 게시 카피 (바로 복사해 올릴 수 있는 완성형, 메이커 1인칭)"
+      }
+    ],
     "budget": "Korean: 예산 없을 때 추천 전략 1-2줄"
   },
-  "snsCopy": {
-    "title": "SNS 카피",
-    "twitter": [
-      "Korean: 트위터/X 런치 트윗 1 (max 280자, 해시태그 포함)",
-      "Korean: 트위터/X 런치 트윗 2 (다른 각도)",
-      "Korean: 트위터/X 런치 트윗 3 (사회적 증명 각도)"
-    ],
-    "linkedin": "Korean: LinkedIn 런치 포스트 (3-4문장, 전문적 톤)",
-    "instagram": "Korean: Instagram 캡션 (2-3문장 + 해시태그 5개)"
-  },
+  
   "productHunt": {
     "title": "Product Hunt 런치 패키지",
     "tagline": "English: 60자 이내 tagline",
@@ -4662,24 +4660,18 @@ Output ONLY a valid JSON object. No markdown, no explanation.
     },
     "indieHackers": "English: Indie Hackers 포스트 (3-4 sentences, building-in-public tone)",
     "discord": "Korean: Discord/커뮤니티 소개 메시지 (2-3문장)"
-  },
-  "localKR": {
-    "title": "한국 로컬 채널",
-    "everytime": "Korean: 에브리타임 자유게시판 글 (3-5문장, 광고 아닌 경험 공유 톤, '이런 앱 찾았는데' 형식)",
-    "instagramReels": "Korean: Instagram 릴스/스토리 스크립트 (15초 분량, 후킹 첫 줄 + 핵심 기능 1개 + CTA)",
-    "naverCafe": "Korean: 네이버 카페 후기 글 (3-4문장, 자연스러운 사용 후기 톤)"
   }
 }
 
 RULES:
 - TRUTHFULNESS (MANDATORY — this is a brand-new product with ZERO users, reviews, or track record):
   · NEVER fabricate testimonials, reviews, or user quotes. No "베타 사용자 후기", no "저도 쓰고 있어요", no fake satisfied-customer or witness voices anywhere.
-  · NEVER invent statistics or market figures ("60% of cafes", "10만 개 중 60%", "80% use Instagram") unless they are explicitly provided in the context above. If you don't have a real number, don't use one.
+  · NEVER invent statistics, market figures, or market-size numbers — whether stated as fact OR disguised as a rhetorical question ("10만 개 중 얼마나...", "how many of the 100k cafes..."). No invented totals, percentages, or counts at all unless explicitly provided in the context above. If you don't have a real number, don't reference one — not even rhetorically.
   · NEVER promise pricing, trials, or discounts that are not in the input. Do NOT invent "30일 무료 체험" or "연간 2개월 무료". Use ONLY the price given; if no trial/discount is specified, don't create one.
   · Community/local posts (Reddit, Naver Cafe, Everytime, Indie Hackers, Instagram) MUST use the MAKER's honest first-person voice ("제가 만들었어요" / "I built this"), NEVER a fake customer or third-party witness.
   · Where social proof would normally go, use empathy with the problem itself ("if you've ever run out mid-rush...") instead of invented proof.
 - All Korean text must be natural, conversational Korean (not translated-sounding)
-- Twitter copies: exactly 3 different angles. Include relevant hashtags
+- channelStrategy.channels: pick 3-5 channels where THIS specific target customer actually gathers. Judge by the TARGET, not the country — never add a channel just because it's common in a region. Example: for Korean café owners, use Naver Cafe (자영업/카페창업 게시판), KakaoTalk 오픈채팅, Instagram — do NOT use Everytime (a university-student community café owners don't use). Each "copy" must be ready-to-post in that channel's native format and length, in the maker's honest first-person voice.
 - Product Hunt: tagline MUST be under 60 chars. Topics must be real PH topics
 - Google Ads headlines: MUST be under 30 chars each. Descriptions under 90 chars
 - Email bodies: include the deployed URL naturally

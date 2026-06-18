@@ -1048,14 +1048,25 @@ function buildWidgetImports(featureSpec) {
 
 function buildWidgetHooks(featureSpec) {
     if (!featureSpec?.widgets?.some(w => w.type === 'chart')) return '';
+    const cmp = featureSpec.widgets.find(w => w.type === 'comparison');
+    if (cmp?.currentField) {
+        const nameField = cmp.nameField || cmp.currentField;
+        return `
+  const chartData = useMemo(() => {
+    return items
+      .map(item => ({ name: String(item.${nameField} ?? '-'), value: Number(item.${cmp.currentField}) || 0 }))
+      .slice(0, 8);
+  }, [items]);
+`;
+    }
     return `
-  const monthlyData = useMemo(() => {
+  const chartData = useMemo(() => {
     const counts: Record<string, number> = {};
     items.forEach(item => {
       const month = new Date(item.created_at).toLocaleDateString('ko-KR', { month: 'short' });
       counts[month] = (counts[month] || 0) + 1;
     });
-    return Object.entries(counts).slice(-6).map(([month, count]) => ({ month, count }));
+    return Object.entries(counts).slice(-6).map(([name, value]) => ({ name, value }));
   }, [items]);
 `;
 }
@@ -1088,18 +1099,23 @@ function buildWidgetJSX(featureSpec) {
         }
         if (w.type === 'chart') {
             return `
-        {monthlyData.length > 0 && (
-          <div style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'20px 24px',marginBottom:'24px'}}>
-            <h2 style={{fontSize:'0.95rem',fontWeight:700,color:'#aaa',marginBottom:'16px'}}>${w.title}</h2>
-            <div style={{display:'flex',alignItems:'flex-end',gap:'8px',height:'80px'}}>
-              {monthlyData.map((d, i) => (
-                <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'6px'}}>
-                  <div style={{width:'100%',height:monthlyData.length>0?\`\${Math.round((d.count/Math.max(...monthlyData.map(x=>x.count)))*64)}px\`:'4px',background:'#FF2D20',borderRadius:'4px 4px 0 0',minHeight:'4px',transition:'height 0.3s ease'}}/>
-                  <span style={{fontSize:'11px',color:'#666'}}>{d.month}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        {chartData.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>${featureSpec.widgets.find(x => x.type === 'comparison')?.currentField ? '항목별 현재 수량' : '월별 등록 추이'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={chartData} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" vertical={false} />
+                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px', color: '#f1f1f1' }} />
+                  <Bar dataKey="value" fill="#FF2D20" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         )}`;
         }
         if (w.type === 'comparison') {
@@ -1300,6 +1316,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Plus, Trash2, LogOut, Pencil${widgetImports} } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+${needsUseMemo ? "import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';\n" : ''}
 
 const supabase = createClient('${supabaseUrl}', '${supabaseAnonKey}', {
   auth: {

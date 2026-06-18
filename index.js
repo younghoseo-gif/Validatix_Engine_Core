@@ -1072,10 +1072,12 @@ function buildWidgetJSX(featureSpec) {
                 else if (card.agg === 'sum') valueExpr = `items.reduce((s,i) => s + Number(i.${card.field}||0), 0)`;
                 else valueExpr = `items.filter(i => i.${card.field}).length`;
                 return `
-          <div style={{background:'#1e1e1e',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'20px 24px',flex:1,minWidth:'140px'}}>
-            <p style={{color:'#888',fontSize:'13px',marginBottom:'8px'}}>${card.label}</p>
-            <p style={{color:'${card.color}',fontSize:'2rem',fontWeight:900}}>{${valueExpr}}</p>
-          </div>`;
+          <Card className="flex-1 min-w-[140px]">
+            <CardContent>
+              <p style={{color:'#888',fontSize:'13px',marginBottom:'8px'}}>${card.label}</p>
+              <p style={{color:'${card.color}',fontSize:'2rem',fontWeight:900}}>{${valueExpr}}</p>
+            </CardContent>
+          </Card>`;
             }).join('');
             return `
         <div style={{marginBottom:'24px'}}>
@@ -1260,15 +1262,15 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
     const listFields = schema.listFields?.length ? schema.listFields : [schema.primaryField];
     const listHeaders = listFields.map(f => {
         const col = userFields.find(c => c.name === f);
-        return `<th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',color:'#888',fontWeight:600,textTransform:'uppercase',letterSpacing:'1px'}}>${col ? col.label : f}</th>`;
+        return `<TableHead>${col ? col.label : f}</TableHead>`;
     }).join('\n                  ');
     const listCells = listFields.map(f => {
         const col = userFields.find(c => c.name === f);
         const pg = col ? toPgType(col.type) : 'text';
         if (pg === 'boolean') {
-            return `<td style={{padding:'12px 16px',color:'#ccc',fontSize:'14px'}}>{item['${f}'] === true ? '예' : item['${f}'] === false ? '아니오' : '-'}</td>`;
+            return `<TableCell>{item['${f}'] === true ? '예' : item['${f}'] === false ? '아니오' : '-'}</TableCell>`;
         }
-        return `<td style={{padding:'12px 16px',color:'#ccc',fontSize:'14px'}}>{item['${f}'] ?? '-'}</td>`;
+        return `<TableCell>{item['${f}'] ?? '-'}</TableCell>`;
     }).join('\n                  ');
 
     const insertFields = userFields.map(f => {
@@ -1296,6 +1298,8 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
 import { useState, useEffect${needsUseMemo ? ', useMemo' : ''} } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Plus, Trash2, LogOut, Pencil${widgetImports} } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const supabase = createClient('${supabaseUrl}', '${supabaseAnonKey}', {
   auth: {
@@ -1463,23 +1467,27 @@ ${widgetHooks}
         ${widgetJSX}
 
         {showForm && (
-          <div style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'24px',marginBottom:'24px'}}>
-            <h2 style={{fontSize:'1.1rem',fontWeight:700,color:'#fff',marginBottom:'20px'}}>{editingId ? '항목 수정' : '새 항목 추가'}</h2>
-            <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:'16px'}}>
-              ${formFields}
-              {errorMsg && <p style={{color:'#f87171',fontSize:'13px'}}>{errorMsg}</p>}
-              <div style={{display:'flex',gap:'12px',marginTop:'8px'}}>
-                <button type="submit" disabled={loading}
-                  style={{background:'#FF2D20',color:'#fff',border:'none',borderRadius:'8px',padding:'12px 24px',fontWeight:700,cursor:'pointer',fontSize:'14px'}}>
-                  {loading ? '저장 중...' : (editingId ? '수정 저장' : '저장')}
-                </button>
-                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setErrorMsg(''); }}
-                  style={{background:'transparent',color:'#aaa',border:'1px solid #333',borderRadius:'8px',padding:'12px 24px',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>
-                  취소
-                </button>
-              </div>
-            </form>
-          </div>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>{editingId ? '항목 수정' : '새 항목 추가'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+                ${formFields}
+                {errorMsg && <p style={{color:'#f87171',fontSize:'13px'}}>{errorMsg}</p>}
+                <div style={{display:'flex',gap:'12px',marginTop:'8px'}}>
+                  <button type="submit" disabled={loading}
+                    style={{background:'#FF2D20',color:'#fff',border:'none',borderRadius:'8px',padding:'12px 24px',fontWeight:700,cursor:'pointer',fontSize:'14px'}}>
+                    {loading ? '저장 중...' : (editingId ? '수정 저장' : '저장')}
+                  </button>
+                  <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setErrorMsg(''); }}
+                    style={{background:'transparent',color:'#aaa',border:'1px solid #333',borderRadius:'8px',padding:'12px 24px',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>
+                    취소
+                  </button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         )}
 
         <div style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',overflow:'hidden'}}>
@@ -1492,24 +1500,22 @@ ${widgetHooks}
               <p style={{fontSize:'13px'}}>위의 "새로 추가" 버튼을 눌러 시작하세요</p>
             </div>
           ) : (
-            <table style={{width:'100%',borderCollapse:'collapse'}}>
-              <thead>
-                <tr style={{borderBottom:'1px solid #2a2a2a',background:'#111'}}>
+            <Table>
+              <TableHeader>
+                <TableRow>
                   ${listHeaders}
-                  <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',color:'#888',fontWeight:600,textTransform:'uppercase',letterSpacing:'1px'}}>날짜</th>
-                  <th style={{padding:'12px 16px',width:'90px'}}></th>
-                </tr>
-              </thead>
-              <tbody>
+                  <TableHead>날짜</TableHead>
+                  <TableHead className="w-[90px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {items.map((item) => (
-                  <tr key={item.id} style={{borderBottom:'1px solid #1e1e1e',transition:'background 0.15s'}}
-                    onMouseEnter={e=>(e.currentTarget.style.background='#222')}
-                    onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                  <TableRow key={item.id}>
                     ${listCells}
-                    <td style={{padding:'12px 16px',color:'#666',fontSize:'13px'}}>
+                    <TableCell className="text-muted-foreground text-sm">
                       {new Date(item.created_at).toLocaleDateString('ko-KR')}
-                    </td>
-                    <td style={{padding:'12px 16px'}}>
+                    </TableCell>
+                    <TableCell>
                       <div style={{display:'flex',gap:'4px'}}>
                         <button onClick={() => startEdit(item)}
                           style={{background:'transparent',border:'none',color:'#555',cursor:'pointer',padding:'4px'}}
@@ -1524,11 +1530,11 @@ ${widgetHooks}
                           <Trash2 size={16}/>
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
 
@@ -2727,7 +2733,7 @@ function validateComponentCode(code, componentName) {
         }
         // ShadCN 설치된 컴포넌트만 허용
         if (pkg.startsWith('@/components/ui/')) {
-            const INSTALLED_UI = ['card','button','badge','accordion','separator','tabs','input','label'];
+            const INSTALLED_UI = ['card','button','badge','accordion','separator','tabs','input','label','table'];
             const uiName = pkg.replace('@/components/ui/', '');
             if (!INSTALLED_UI.includes(uiName)) {
                 errors.push(`미설치 ShadCN 컴포넌트: ${uiName} (설치된 것: ${INSTALLED_UI.join(', ')})`);

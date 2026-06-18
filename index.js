@@ -1092,7 +1092,7 @@ function buildWidgetJSX(featureSpec) {
             }).join('');
             return `
         <div style={{marginBottom:'24px'}}>
-          <h2 style={{fontSize:'0.95rem',fontWeight:700,color:'#aaa',marginBottom:'12px'}}>${w.title}</h2>
+          <h2 style={{fontSize:'1rem',fontWeight:500,color:'#f1f1f1',lineHeight:'1.375',marginBottom:'12px'}}>${w.title}</h2>
           <div style={{display:'flex',gap:'16px',flexWrap:'wrap'}}>${cards}
           </div>
         </div>`;
@@ -1125,7 +1125,7 @@ function buildWidgetJSX(featureSpec) {
             if (!cur || !thr) return '';
             return `
         <div style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'20px 24px',marginBottom:'24px'}}>
-          <h2 style={{fontSize:'0.95rem',fontWeight:700,color:'#aaa',marginBottom:'12px'}}>${w.title}</h2>
+          <h2 style={{fontSize:'1rem',fontWeight:500,color:'#f1f1f1',lineHeight:'1.375',marginBottom:'12px'}}>${w.title}</h2>
           {(() => {
             const lowItems = items.filter((i: any) => i.${cur} != null && i.${thr} != null && Number(i.${cur}) < Number(i.${thr}));
             return (
@@ -1194,7 +1194,7 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
         if (kind === 'image') {
             return `
               <div>
-                <label style={{display:'block',fontSize:'13px',color:'#aaa',marginBottom:'6px'}}>${label}</label>
+                <label style={{display:'block',fontSize:'13px',color:'#888',marginBottom:'6px'}}>${label}</label>
                 {form['${f.name}'] && (
                   <img src={form['${f.name}']} alt="" style={{width:'100%',maxHeight:'180px',objectFit:'cover',borderRadius:'8px',marginBottom:'8px',border:'1px solid #333'}} />
                 )}
@@ -1230,7 +1230,7 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
             const im = pg === 'integer' ? 'numeric' : 'decimal';
             return `
               <div>
-                <label style={{display:'block',fontSize:'13px',color:'#aaa',marginBottom:'6px'}}>${label}</label>
+                <label style={{display:'block',fontSize:'13px',color:'#888',marginBottom:'6px'}}>${label}</label>
                 <input
                   type="number"
                   step="${step}"
@@ -1246,7 +1246,7 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
         if (kind === 'date') {
             return `
               <div>
-                <label style={{display:'block',fontSize:'13px',color:'#aaa',marginBottom:'6px'}}>${label}</label>
+                <label style={{display:'block',fontSize:'13px',color:'#888',marginBottom:'6px'}}>${label}</label>
                 <input
                   type="date"
                   value={form['${f.name}'] ?? ''}
@@ -1259,7 +1259,7 @@ function buildDashboardPage(schema, featureSpec, supabaseUrl, supabaseAnonKey) {
         const inputType = kind === 'phone' ? 'tel' : 'text';
         return `
               <div>
-                <label style={{display:'block',fontSize:'13px',color:'#aaa',marginBottom:'6px'}}>${label}</label>
+                <label style={{display:'block',fontSize:'13px',color:'#888',marginBottom:'6px'}}>${label}</label>
                 <input
                   type="${inputType}"
                   placeholder="${ph}"
@@ -1451,7 +1451,7 @@ ${widgetHooks}
 
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'32px'}}>
           <div>
-            <h1 style={{fontSize:'1.8rem',fontWeight:900,color:'#fff'}}>${schema.displayName}</h1>
+            <h1 style={{fontSize:'1.8rem',fontWeight:900,color:'#f1f1f1'}}>${schema.displayName}</h1>
             <p style={{color:'#888',fontSize:'14px',marginTop:'4px'}}>{user.email}</p>
           </div>
           <div style={{display:'flex',gap:'12px'}}>
@@ -1460,7 +1460,7 @@ ${widgetHooks}
               <Plus size={16}/> 새로 추가
             </button>
             <button onClick={handleLogout}
-              style={{display:'flex',alignItems:'center',gap:'8px',background:'#1a1a1a',color:'#aaa',border:'1px solid #333',borderRadius:'8px',padding:'10px 20px',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>
+              style={{display:'flex',alignItems:'center',gap:'8px',background:'#1a1a1a',color:'#888',border:'1px solid #333',borderRadius:'8px',padding:'10px 20px',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>
               <LogOut size={16}/> 로그아웃
             </button>
           </div>
@@ -1498,7 +1498,7 @@ ${widgetHooks}
                     {loading ? '저장 중...' : (editingId ? '수정 저장' : '저장')}
                   </button>
                   <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setErrorMsg(''); }}
-                    style={{background:'transparent',color:'#aaa',border:'1px solid #333',borderRadius:'8px',padding:'12px 24px',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>
+                    style={{background:'transparent',color:'#888',border:'1px solid #333',borderRadius:'8px',padding:'12px 24px',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>
                     취소
                   </button>
                 </div>
@@ -1509,7 +1509,7 @@ ${widgetHooks}
 
         <div style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',overflow:'hidden'}}>
           <div style={{padding:'16px 20px',borderBottom:'1px solid #2a2a2a'}}>
-            <h2 style={{fontSize:'1rem',fontWeight:700,color:'#fff'}}>전체 목록 <span style={{color:'#FF2D20',marginLeft:'8px'}}>{items.length}</span></h2>
+            <h2 style={{fontSize:'1rem',fontWeight:700,color:'#f1f1f1'}}>전체 목록 <span style={{color:'#FF2D20',marginLeft:'8px'}}>{items.length}</span></h2>
           </div>
           {items.length === 0 ? (
             <div style={{padding:'48px',textAlign:'center',color:'#555'}}>

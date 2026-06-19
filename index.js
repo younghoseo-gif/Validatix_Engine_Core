@@ -973,6 +973,7 @@ RULES:
 - stat_cards cards: 2-3 items
 - field must be "total", "recent", or one of: ${JSON.stringify(userColNames)}
 - agg must be "count", "avg", or "sum". Use "avg" for averages (e.g. average rating), "sum" for summing a numeric field, otherwise "count". For "total" and "recent", always use "count".
+- stat_cards aggregate over ALL records only; there is NO conditional or filtered aggregation. NEVER use a label implying a subset of records (e.g. 부족, 저재고, 발주, 임박, 초과, 미달, 미만). Such low-stock/threshold counts are shown by a SEPARATE widget — never duplicate them in stat_cards. Every label MUST describe exactly what is computed: "sum" → "전체 OO 합계", "avg" → "평균 OO", count of "total" → "전체 OO".
 - icon must be one of: BookOpen, Calendar, CheckSquare, TrendingUp, Star, Clock, BarChart2, Activity, Target, Award, Bookmark, List
 - ALL text in Korean
 - Output ONLY JSON` }]
@@ -1687,7 +1688,7 @@ RULES:
 - navbar.links: exactly 4 objects. Each object: {"text_ko":"Korean menu","text_en":"English menu","anchor":"sectionId"}. anchor MUST be one of: hero, features, stats, pricing, faq, cta. No duplicates. Choose the most relevant section for each menu item.
 - hero.stats: exactly 4 items. Realistic goal numbers.
 - features.items: 4-6 items. icon=valid lucide-react name(Zap/Shield/Brain/BarChart2/Globe/Lock/Star/Target). image_seed=MUST be a specific concrete English noun that visually represents THAT feature(e.g. for pet app:"dog","bath","leash"; for food app:"kitchen","plate","chef"). NEVER use generic words like "technology","security","innovation","solution". desc_ko=MUST be 2-3 full sentences(50-100chars) explaining what the feature does specifically. NEVER write vague one-liners.
-- stats.items: 3-4 items. desc_ko under 15chars. IMPORTANT: Determine if this is a NEW service (no existing users/data) or an EXISTING service (has real metrics). For NEW services: use service promises/specs instead of fake user counts (e.g. "24/7", "3min Setup", "99.9% Uptime", "0 Coding Required"). NEVER use fake numbers like "120K+ Users" or "500+ Companies" for new services. For EXISTING services: use realistic achievement numbers.
+- stats.items: 3-4 items. desc_ko under 15chars. IMPORTANT: Determine if this is a NEW service (no existing users/data) or an EXISTING service (has real metrics). For NEW services: use ONLY factual, verifiable promises — never invented metrics. NEVER fabricate uptime/accuracy/satisfaction percentages (no "99.9% Uptime", no "99% Accuracy") or user/customer counts ("120K+ Users", "500+ Companies") — these were never measured and constitute false advertising. Use plain truths the app can stand behind (e.g. "24/7" access, "No Install", "No Contract", or the actual price from the idea/PRD). If a number cannot be stated truthfully, use a short factual phrase instead. For EXISTING services: use realistic achievement numbers.
 - pricing.plans: 2-4 plans. Simple tools=2(Free+Pro). SaaS=3(Free+Pro+Business). Only one highlight=true. name_ko/name_en: plan name in both languages (e.g. name_en:"Free", name_ko:"무료"). period_ko/period_en: billing period (e.g. period_en:"/mo", period_ko:"/월"). features_ko/features_en: feature list in both languages. cta_ko/cta_en: button text (e.g. cta_en:"Get Started", cta_ko:"시작하기"). price: If the user mentioned a specific price in their idea or PRD, you MUST use that exact price. Do NOT override user-specified pricing with your own numbers. If no price was mentioned, use reasonable defaults (e.g. "$0", "$29").
 - faq.items: 3-5 Q&A pairs. Specific to this idea. q_ko/q_en: question in both languages. a_ko/a_en: answer in both languages.
 - footer.columns: exactly 3.
@@ -2335,7 +2336,7 @@ function replaceCTAText(code, json, langBind) {
         (match, open, content, close) => {
             if (content.includes("lang==='ko'")) return match;
             const safeB = brandName.replace(/'/g, "\\'");
-            return `${open}{lang==='ko'?'${safeB}와 함께 아이디어를 현실로 만들어 보세요.':'Turn your idea into reality with ${safeB}.'}${close}`;
+            return `${open}{lang==='ko'?'${safeB}로 더 쉽고 빠르게 시작해 보세요.':'Get started with ${safeB} — faster and simpler.'}${close}`;
         }
     );
 
@@ -2664,7 +2665,7 @@ export default function CTASection() {
     <section id="cta" style={{padding:'72px 24px',background:'linear-gradient(135deg, ${primaryColor}15 0%, #0f0f0f 50%, ${primaryColor}10 100%)'}}>
       <div style={{maxWidth:'800px',margin:'0 auto',textAlign:'center'}}>
         <h2 data-vp-id="cta-title" style={{fontSize:'2.5rem',fontWeight:900,color:'#fff',marginBottom:'16px'}}>{lang==='ko'?'지금 바로 시작하세요':'Get Started Today'}</h2>
-        <p data-vp-id="cta-desc" style={{color:'#999',fontSize:'1.05rem',lineHeight:'1.7',marginBottom:'32px'}}>{lang==='ko'?'${brandName}와 함께 아이디어를 현실로 만들어 보세요.':'Turn your idea into reality with ${brandName}.'}</p>
+        <p data-vp-id="cta-desc" style={{color:'#999',fontSize:'1.05rem',lineHeight:'1.7',marginBottom:'32px'}}>{lang==='ko'?'${brandName}로 더 쉽고 빠르게 시작해 보세요.':'Get started with ${brandName} — faster and simpler.'}</p>
         <div style={{display:'flex',gap:'16px',justifyContent:'center',flexWrap:'wrap'}}>
           <a href="/auth" className="vx-btn-primary" data-vp-id="cta-btn"><ArrowRight size={16}/>{lang==='ko'?'무료로 시작하기':'Start for Free'}</a>
         </div>
@@ -4795,20 +4796,24 @@ let prebuiltJson = contentJson || null;
             sendLog(lang === 'ko' ? `[Claude] ✅ 기존 경쟁사분석 결과 재사용` : `[Claude] ✅ Reusing existing competitor analysis`);
             res.write(`data: ${JSON.stringify({ competitor: competitorData })}\n\n`);
         }
-        const expandedPrompt = await expandPrompt(idea, prd, marketData, competitorData);
+        const userSetPrice = /\d[\d,]*\s*원|[₩$]\s*[\d,]/.test(prd);
+        const effectivePrd = (!userSetPrice && marketData && marketData.startPrice)
+            ? prd + `\n\n[추천 가격] ${marketData.startPrice}`
+            : prd;
+        const expandedPrompt = await expandPrompt(idea, effectivePrd, marketData, competitorData);
         sendLog(isKo ? `[Validatix] 📝 프롬프트 증폭 완료.` : `[Validatix] 📝 Prompt amplified.`);
 
         const hasPrebuiltContent = prebuiltJson && prebuiltJson.stats?.items?.length > 0 && prebuiltJson.pricing?.plans?.length > 0 && prebuiltJson.features?.items?.length > 0;
 if (!hasPrebuiltContent) {
   try {
-    const previewJson = await generateContentJSON(idea, sendLog, lang, prd);
+    const previewJson = await generateContentJSON(idea, sendLog, lang, effectivePrd);
     res.write(`data: ${JSON.stringify({ contentJson: previewJson })}\n\n`);
     prebuiltJson = previewJson;
   } catch(e) {}
 } else {
   res.write(`data: ${JSON.stringify({ contentJson: prebuiltJson })}\n\n`);
 }
-        let currentFiles = await generateMultiFileArchitecture(expandedPrompt, prd, marketData, sendLog, isPaidUser, prebuiltJson, lang);
+        let currentFiles = await generateMultiFileArchitecture(expandedPrompt, effectivePrd, marketData, sendLog, isPaidUser, prebuiltJson, lang);
 
         const projectName = `validatix-app-${Date.now()}`;
         const targetDir = path.join(__dirname, 'Generated_Projects');

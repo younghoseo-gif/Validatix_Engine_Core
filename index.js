@@ -1074,6 +1074,7 @@ function buildWidgetHooks(featureSpec) {
 
 function buildWidgetJSX(featureSpec) {
     if (!featureSpec?.widgets?.length) return '';
+    const SAFE_ICONS = new Set(['BookOpen','Calendar','CheckSquare','TrendingUp','Star','Clock','BarChart2','Activity','Target','Award','Bookmark','List']);
     return featureSpec.widgets.map(w => {
         if (w.type === 'stat_cards') {
             const cards = (w.cards || []).map(card => {
@@ -1086,8 +1087,11 @@ function buildWidgetJSX(featureSpec) {
                 return `
           <Card className="flex-1 min-w-[140px]">
             <CardContent>
-              <p style={{color:'#888',fontSize:'13px',marginBottom:'8px'}}>${card.label}</p>
-              <p style={{color:'${card.color}',fontSize:'2rem',fontWeight:900}}>{${valueExpr}}</p>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px'}}>
+                <p style={{color:'#888',fontSize:'13px'}}>${card.label}</p>
+                ${card.icon && SAFE_ICONS.has(card.icon) ? `<${card.icon} size={18} color="#666" />` : ''}
+              </div>
+              <p style={{color:'#f1f1f1',fontSize:'2rem',fontWeight:900}}>{${valueExpr}}</p>
             </CardContent>
           </Card>`;
             }).join('');
@@ -1692,6 +1696,7 @@ RULES:
 - pricing.plans: 2-4 plans. Simple tools=2(Free+Pro). SaaS=3(Free+Pro+Business). Only one highlight=true. name_ko/name_en: plan name in both languages (e.g. name_en:"Free", name_ko:"무료"). period_ko/period_en: billing period (e.g. period_en:"/mo", period_ko:"/월"). features_ko/features_en: feature list in both languages. cta_ko/cta_en: button text (e.g. cta_en:"Get Started", cta_ko:"시작하기"). price: If the user mentioned a specific price in their idea or PRD, you MUST use that exact price. Do NOT override user-specified pricing with your own numbers. If no price was mentioned, use reasonable defaults (e.g. "$0", "$29").
 - faq.items: 3-5 Q&A pairs. Specific to this idea. q_ko/q_en: question in both languages. a_ko/a_en: answer in both languages.
 - footer.columns: exactly 3.
+- Unless the PRD explicitly includes a real push/notification feature, do NOT use words implying active alerts/notifications (알림/통보/푸시/notify/push/alert) for features that are actually on-screen displays the user must open the app to see; use 표시/확인/조회 (show/check/view) instead.
 - All _ko values: SHORT ${isKo ? 'Korean' : 'English'} under 10chars. Exception: desc_ko can be longer.
 - Output ONLY JSON.`;
 

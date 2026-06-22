@@ -2993,6 +2993,7 @@ Generate VARIED, MODERN, PRODUCTION-QUALITY components.
 19. ShadCN: You MAY use from "@/components/ui/": card, button, badge, accordion, separator, tabs, input, label. These are the ONLY installed ones. Do NOT use dialog, sheet, select, dropdown-menu, or any others.
 20. MOBILE RESPONSIVE: word-break: keep-all for Korean. Hero title: fontSize: clamp(1.8rem, 5vw, 3.5rem). Grid: collapse to single column on mobile.
 21. NO NAVBAR: Do NOT include any <nav>, navigation bar, header bar, or top menu in your component. The Navbar is a SEPARATE component managed by the system. Including any navigation element will cause a duplicate navbar bug.
+22. FEATURE HONESTY: Depict ONLY features present in the provided content data. NEVER invent functional UI implying a capability the app does not have — no notification/alert cards or banners, no status badges, no "today's tasks"/todo widgets, no elapsed-time or countdown displays (e.g. "3일 경과", "N days ago"), no reminder popups, no mock UI suggesting automatic detection, calculation, or notification. Decorative background imagery is fine; fake feature UI is forbidden. When unsure, leave it out.
 
 [PRE-VALIDATION CHECKLIST - YOUR CODE WILL BE PARSED BY @babel/parser IMMEDIATELY]
 Before outputting each component, mentally verify:
@@ -3090,6 +3091,7 @@ Generate VARIED, MODERN, PRODUCTION-QUALITY components.
 17. ShadCN: You MAY use from "@/components/ui/": card, button, badge, accordion, separator, tabs, input, label. These are the ONLY installed ones. Do NOT use dialog, sheet, select, dropdown-menu, or any others.
 18. All CTA buttons linking to auth: <a href="/auth" className="vx-btn-primary"> or vx-btn-secondary
 19. NO NAVBAR: Do NOT include any <nav>, navigation bar, header bar, or top menu in your component. The Navbar is a SEPARATE component managed by the system. Including any navigation element will cause a duplicate navbar bug.
+20. FEATURE HONESTY: Depict ONLY features present in the provided content data. NEVER invent functional UI implying a capability the app does not have — no notification/alert cards or banners, no status badges, no "today's tasks"/todo widgets, no elapsed-time or countdown displays (e.g. "3일 경과", "N days ago"), no reminder popups, no mock UI suggesting automatic detection, calculation, or notification. Decorative background imagery is fine; fake feature UI is forbidden. When unsure, leave it out.
 
 [PRE-VALIDATION CHECKLIST - YOUR CODE WILL BE PARSED BY @babel/parser IMMEDIATELY]
 Before outputting each component, mentally verify:

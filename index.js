@@ -1807,6 +1807,20 @@ RULES:
         }
     }
 
+    // ───── 통화 통일: 모든 플랜을 유료 플랜의 통화로 맞춤 (₩/$ 혼용 방지) ─────
+    if (json.pricing && Array.isArray(json.pricing.plans)) {
+        const plans = json.pricing.plans;
+        const paid = plans.find(p => /₩|\$/.test(String(p.price || '')) && !/^[₩$]?0$/.test(String(p.price || '').replace(/,/g, '')));
+        const symbol = paid && String(paid.price).includes('₩') ? '₩' : (paid && String(paid.price).includes('$') ? '$' : null);
+        if (symbol) {
+            plans.forEach(p => {
+                const priceStr = String(p.price || '').replace(/,/g, '');
+                if (/^[₩$]?0$/.test(priceStr) || p.price === '무료' || p.price === 'Free') {
+                    p.price = `${symbol}0`;
+                }
+            });
+        }
+    }
     return applyKoMap(json);
 }
 
@@ -3983,6 +3997,21 @@ async function generateMultiFileArchitecture(idea, prd, marketData, sendLog, isP
                     if (i < paidPlans.length) paidPlans[i].price = price;
                 });
             }
+        }
+    }
+    
+    // ───── 통화 통일: 모든 플랜을 유료 플랜의 통화로 맞춤 (₩/$ 혼용 방지) ─────
+    if (json.pricing && Array.isArray(json.pricing.plans)) {
+        const plans = json.pricing.plans;
+        const paid = plans.find(p => /₩|\$/.test(String(p.price || '')) && !/^[₩$]?0$/.test(String(p.price || '').replace(/,/g, '')));
+        const symbol = paid && String(paid.price).includes('₩') ? '₩' : (paid && String(paid.price).includes('$') ? '$' : null);
+        if (symbol) {
+            plans.forEach(p => {
+                const priceStr = String(p.price || '').replace(/,/g, '');
+                if (/^[₩$]?0$/.test(priceStr) || p.price === '무료' || p.price === 'Free') {
+                    p.price = `${symbol}0`;
+                }
+            });
         }
     }
     sendLog(`[Claude] ✅ Content JSON ready.`);
